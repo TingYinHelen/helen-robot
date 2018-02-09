@@ -139,10 +139,10 @@ public class MsgCenter {
 										core.getMsgList().get(0).getRecommendInfo().getUserName());
 							} else if (msg.getType().equals(MsgTypeEnum.MEDIA.getType())) { // 多媒体消息
 								MessageTools.sendMsgByNickName("hello", "glowd");
-								MessageTools.webWxSendInvite("glowd");
-								MessageTools.sendFileMsgByNickName("glowd", "/Users/glowd/spider/loopring.txt");
+								// MessageTools.webWxSendInvite("glowd");
+								// MessageTools.sendFileMsgByNickName("glowd", "/Users/glowd/spider/loopring.txt");
 								// MessageTools.sendInviteByUserId("hao");
-								// MessageTools.sendPicMsgByN ickName("风清扬","/Users/hao/Desktop/1.jpg");
+								// MessageTools.sendPicMsgByN ickName("风清扬","/Users/glowd/Desktop/1.jpg");
 								// String result = msgHandler.mediaMsgHandle(msg);
 								// MessageTools.sendMsgById(result, core.getMsgList().get(0).getFromUserName());
 							}
