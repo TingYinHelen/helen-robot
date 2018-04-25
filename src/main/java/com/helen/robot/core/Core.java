@@ -17,259 +17,263 @@ import java.util.Map;
  */
 public class Core {
 
-	private static Core instance;
+    private static Core instance;
 
-	private Core() {
+    private Core() {
 
-	}
+    }
 
-	public static Core getInstance() {
-		if (instance == null) {
-			synchronized (Core.class) {
-				instance = new Core();
-			}
-		}
-		return instance;
-	}
+    public static Core getInstance() {
+        if (instance == null) {
+            synchronized (Core.class) {
+                instance = new Core();
+            }
+        }
+        return instance;
+    }
 
-	boolean alive = false;
-	private int memberCount = 0;
+    public static void resetInstance() {
+        instance = new Core();
+    }
 
-	private String indexUrl;
+    boolean alive = false;
+    private int memberCount = 0;
 
-	private String userName;
-	private String nickName;
-	
-	/**接收的所有消息*/
-	private List<BaseMsg> msgList = new ArrayList<BaseMsg>();
+    private String indexUrl;
 
-	/*** 登陆账号自身信息 */
-	private JSONObject userSelf; 
-	/*** 好友+群聊+公众号+特殊账号 */
-	private List<JSONObject> memberList = new ArrayList<>(); // 
-	/*** 好友 */
-	private List<JSONObject> contactList = new ArrayList<>();// 好友
-	private List<JSONObject> groupList = new ArrayList<>(); // 群
-	private Map<String, JSONArray> groupMemeberMap = new HashMap<>(); // 群聊成员字典
-	private List<JSONObject> publicUsersList = new ArrayList<>();// 公众号／服务号
-	private List<JSONObject> specialUsersList = new ArrayList<>();// 特殊账号
-	private List<String> groupIdList = new ArrayList<>(); // 群ID列表
-	private List<String> groupNickNameList = new ArrayList<>(); // 群NickName列表
+    private String userName;
+    private String nickName;
 
-	private Map<String, JSONObject> userInfoMap = new HashMap<>();
+    /** 接收的所有消息 */
+    private List<BaseMsg> msgList = new ArrayList<BaseMsg>();
 
-	Map<String, Object> loginInfo    = new HashMap<>();
-	MyHttpClient        myHttpClient = MyHttpClient.getInstance();
-	String              uuid         = null;
+    /*** 登陆账号自身信息 */
+    private JSONObject userSelf;
+    /*** 好友+群聊+公众号+特殊账号 */
+    private List<JSONObject> memberList = new ArrayList<>(); //
+    /*** 好友 */
+    private List<JSONObject> contactList = new ArrayList<>();// 好友
+    private List<JSONObject> groupList = new ArrayList<>(); // 群
+    private Map<String, JSONArray> groupMemeberMap = new HashMap<>(); // 群聊成员字典
+    private List<JSONObject> publicUsersList = new ArrayList<>();// 公众号／服务号
+    private List<JSONObject> specialUsersList = new ArrayList<>();// 特殊账号
+    private List<String> groupIdList = new ArrayList<>(); // 群ID列表
+    private List<String> groupNickNameList = new ArrayList<>(); // 群NickName列表
 
-	boolean useHotReload = false;
-	String hotReloadDir = "itchat.pkl";
-	int receivingRetryCount = 5;
+    private Map<String, JSONObject> userInfoMap = new HashMap<>();
 
-	private long lastNormalRetcodeTime; // 最后一次收到正常retcode的时间，秒为单位
+    Map<String, Object> loginInfo = new HashMap<>();
+    MyHttpClient myHttpClient = MyHttpClient.getInstance();
+    String uuid = null;
 
-	/**
-	 * 请求参数
-	 */
-	public Map<String, Object> getParamMap() {
-		return new HashMap<String, Object>(1) {
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
+    boolean useHotReload = false;
+    String hotReloadDir = "itchat.pkl";
+    int receivingRetryCount = 5;
 
-			{
-				Map<String, String> map = new HashMap<>();
-				for (BaseParaEnum baseRequest : BaseParaEnum.values()) {
-					map.put(baseRequest.para(), getLoginInfo().get(baseRequest.value()).toString());
-				}
-				put("BaseRequest", map);
-			}
-		};
-	}
+    private long lastNormalRetcodeTime; // 最后一次收到正常retcode的时间，秒为单位
 
-	public boolean isAlive() {
-		return alive;
-	}
+    /**
+     * 请求参数
+     */
+    public Map<String, Object> getParamMap() {
+        return new HashMap<String, Object>(1) {
+            /**
+             * 
+             */
+            private static final long serialVersionUID = 1L;
 
-	public void setAlive(boolean alive) {
-		this.alive = alive;
-	}
+            {
+                Map<String, String> map = new HashMap<>();
+                for (BaseParaEnum baseRequest : BaseParaEnum.values()) {
+                    map.put(baseRequest.para(), getLoginInfo().get(baseRequest.value()).toString());
+                }
+                put("BaseRequest", map);
+            }
+        };
+    }
 
-	public List<JSONObject> getMemberList() {
-		return memberList;
-	}
+    public boolean isAlive() {
+        return alive;
+    }
 
-	public void setMemberList(List<JSONObject> memberList) {
-		this.memberList = memberList;
-	}
+    public void setAlive(boolean alive) {
+        this.alive = alive;
+    }
 
-	public Map<String, Object> getLoginInfo() {
-		return loginInfo;
-	}
+    public List<JSONObject> getMemberList() {
+        return memberList;
+    }
 
-	public void setLoginInfo(Map<String, Object> loginInfo) {
-		this.loginInfo = loginInfo;
-	}
+    public void setMemberList(List<JSONObject> memberList) {
+        this.memberList = memberList;
+    }
 
-	public String getUuid() {
-		return uuid;
-	}
+    public Map<String, Object> getLoginInfo() {
+        return loginInfo;
+    }
 
-	public void setUuid(String uuid) {
-		this.uuid = uuid;
-	}
+    public void setLoginInfo(Map<String, Object> loginInfo) {
+        this.loginInfo = loginInfo;
+    }
 
-	public int getMemberCount() {
-		return memberCount;
-	}
+    public String getUuid() {
+        return uuid;
+    }
 
-	public void setMemberCount(int memberCount) {
-		this.memberCount = memberCount;
-	}
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
+    }
 
-	public boolean isUseHotReload() {
-		return useHotReload;
-	}
+    public int getMemberCount() {
+        return memberCount;
+    }
 
-	public void setUseHotReload(boolean useHotReload) {
-		this.useHotReload = useHotReload;
-	}
+    public void setMemberCount(int memberCount) {
+        this.memberCount = memberCount;
+    }
 
-	public String getHotReloadDir() {
-		return hotReloadDir;
-	}
+    public boolean isUseHotReload() {
+        return useHotReload;
+    }
 
-	public void setHotReloadDir(String hotReloadDir) {
-		this.hotReloadDir = hotReloadDir;
-	}
+    public void setUseHotReload(boolean useHotReload) {
+        this.useHotReload = useHotReload;
+    }
 
-	public int getReceivingRetryCount() {
-		return receivingRetryCount;
-	}
+    public String getHotReloadDir() {
+        return hotReloadDir;
+    }
 
-	public void setReceivingRetryCount(int receivingRetryCount) {
-		this.receivingRetryCount = receivingRetryCount;
-	}
+    public void setHotReloadDir(String hotReloadDir) {
+        this.hotReloadDir = hotReloadDir;
+    }
 
-	public MyHttpClient getMyHttpClient() {
-		return myHttpClient;
-	}
+    public int getReceivingRetryCount() {
+        return receivingRetryCount;
+    }
 
-	public List<BaseMsg> getMsgList() {
-		return msgList;
-	}
+    public void setReceivingRetryCount(int receivingRetryCount) {
+        this.receivingRetryCount = receivingRetryCount;
+    }
 
-	public void setMsgList(List<BaseMsg> msgList) {
-		this.msgList = msgList;
-	}
+    public MyHttpClient getMyHttpClient() {
+        return myHttpClient;
+    }
 
-	public void setMyHttpClient(MyHttpClient myHttpClient) {
-		this.myHttpClient = myHttpClient;
-	}
+    public List<BaseMsg> getMsgList() {
+        return msgList;
+    }
 
-	public List<String> getGroupIdList() {
-		return groupIdList;
-	}
+    public void setMsgList(List<BaseMsg> msgList) {
+        this.msgList = msgList;
+    }
 
-	public void setGroupIdList(List<String> groupIdList) {
-		this.groupIdList = groupIdList;
-	}
+    public void setMyHttpClient(MyHttpClient myHttpClient) {
+        this.myHttpClient = myHttpClient;
+    }
 
-	public List<JSONObject> getContactList() {
-		return contactList;
-	}
+    public List<String> getGroupIdList() {
+        return groupIdList;
+    }
 
-	public void setContactList(List<JSONObject> contactList) {
-		this.contactList = contactList;
-	}
+    public void setGroupIdList(List<String> groupIdList) {
+        this.groupIdList = groupIdList;
+    }
 
-	public List<JSONObject> getGroupList() {
-		return groupList;
-	}
+    public List<JSONObject> getContactList() {
+        return contactList;
+    }
 
-	public void setGroupList(List<JSONObject> groupList) {
-		this.groupList = groupList;
-	}
+    public void setContactList(List<JSONObject> contactList) {
+        this.contactList = contactList;
+    }
 
-	public List<JSONObject> getPublicUsersList() {
-		return publicUsersList;
-	}
+    public List<JSONObject> getGroupList() {
+        return groupList;
+    }
 
-	public void setPublicUsersList(List<JSONObject> publicUsersList) {
-		this.publicUsersList = publicUsersList;
-	}
+    public void setGroupList(List<JSONObject> groupList) {
+        this.groupList = groupList;
+    }
 
-	public List<JSONObject> getSpecialUsersList() {
-		return specialUsersList;
-	}
+    public List<JSONObject> getPublicUsersList() {
+        return publicUsersList;
+    }
 
-	public void setSpecialUsersList(List<JSONObject> specialUsersList) {
-		this.specialUsersList = specialUsersList;
-	}
+    public void setPublicUsersList(List<JSONObject> publicUsersList) {
+        this.publicUsersList = publicUsersList;
+    }
 
-	public String getUserName() {
-		return userName;
-	}
+    public List<JSONObject> getSpecialUsersList() {
+        return specialUsersList;
+    }
 
-	public void setUserName(String userName) {
-		this.userName = userName;
-	}
+    public void setSpecialUsersList(List<JSONObject> specialUsersList) {
+        this.specialUsersList = specialUsersList;
+    }
 
-	public String getNickName() {
-		return nickName;
-	}
+    public String getUserName() {
+        return userName;
+    }
 
-	public void setNickName(String nickName) {
-		this.nickName = nickName;
-	}
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
 
-	public JSONObject getUserSelf() {
-		return userSelf;
-	}
+    public String getNickName() {
+        return nickName;
+    }
 
-	public void setUserSelf(JSONObject userSelf) {
-		this.userSelf = userSelf;
-	}
+    public void setNickName(String nickName) {
+        this.nickName = nickName;
+    }
 
-	public Map<String, JSONObject> getUserInfoMap() {
-		return userInfoMap;
-	}
+    public JSONObject getUserSelf() {
+        return userSelf;
+    }
 
-	public void setUserInfoMap(Map<String, JSONObject> userInfoMap) {
-		this.userInfoMap = userInfoMap;
-	}
+    public void setUserSelf(JSONObject userSelf) {
+        this.userSelf = userSelf;
+    }
 
-	public synchronized long getLastNormalRetcodeTime() {
-		return lastNormalRetcodeTime;
-	}
+    public Map<String, JSONObject> getUserInfoMap() {
+        return userInfoMap;
+    }
 
-	public synchronized void setLastNormalRetcodeTime(long lastNormalRetcodeTime) {
-		this.lastNormalRetcodeTime = lastNormalRetcodeTime;
-	}
+    public void setUserInfoMap(Map<String, JSONObject> userInfoMap) {
+        this.userInfoMap = userInfoMap;
+    }
 
-	public List<String> getGroupNickNameList() {
-		return groupNickNameList;
-	}
+    public synchronized long getLastNormalRetcodeTime() {
+        return lastNormalRetcodeTime;
+    }
 
-	public void setGroupNickNameList(List<String> groupNickNameList) {
-		this.groupNickNameList = groupNickNameList;
-	}
+    public synchronized void setLastNormalRetcodeTime(long lastNormalRetcodeTime) {
+        this.lastNormalRetcodeTime = lastNormalRetcodeTime;
+    }
 
-	public Map<String, JSONArray> getGroupMemeberMap() {
-		return groupMemeberMap;
-	}
+    public List<String> getGroupNickNameList() {
+        return groupNickNameList;
+    }
 
-	public void setGroupMemeberMap(Map<String, JSONArray> groupMemeberMap) {
-		this.groupMemeberMap = groupMemeberMap;
-	}
+    public void setGroupNickNameList(List<String> groupNickNameList) {
+        this.groupNickNameList = groupNickNameList;
+    }
 
-	public String getIndexUrl() {
-		return indexUrl;
-	}
+    public Map<String, JSONArray> getGroupMemeberMap() {
+        return groupMemeberMap;
+    }
 
-	public void setIndexUrl(String indexUrl) {
-		this.indexUrl = indexUrl;
-	}
+    public void setGroupMemeberMap(Map<String, JSONArray> groupMemeberMap) {
+        this.groupMemeberMap = groupMemeberMap;
+    }
+
+    public String getIndexUrl() {
+        return indexUrl;
+    }
+
+    public void setIndexUrl(String indexUrl) {
+        this.indexUrl = indexUrl;
+    }
 
 }

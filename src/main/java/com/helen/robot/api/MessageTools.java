@@ -31,9 +31,8 @@ import java.util.*;
  *
  */
 public class MessageTools {
-    private static Logger       LOG          = LoggerFactory.getLogger(MessageTools.class);
-    private static Core         core         = Core.getInstance();
-    private static MyHttpClient myHttpClient = core.getMyHttpClient();
+    private static Logger LOG = LoggerFactory.getLogger(MessageTools.class);
+    private static MyHttpClient myHttpClient = Core.getInstance().getMyHttpClient();
 
     /**
      * 根据UserName发送文本消息
@@ -79,8 +78,8 @@ public class MessageTools {
      *
      */
     public static void webWxSendMsg(int msgType, String content, String toUserName) {
-        String url = String.format(URLEnum.WEB_WX_SEND_MSG.getUrl(),
-            core.getLoginInfo().get("url"));
+        Core core = Core.getInstance();
+        String url = String.format(URLEnum.WEB_WX_SEND_MSG.getUrl(), core.getLoginInfo().get("url"));
         Map<String, Object> msgMap = new HashMap<>();
         msgMap.put("Type", msgType);
         msgMap.put("Content", content);
@@ -90,7 +89,7 @@ public class MessageTools {
         msgMap.put("ClientMsgId", new Date().getTime() * 10);
         Map<String, Object> paramMap = core.getParamMap();
         paramMap.put("Msg", msgMap);
-        //        paramMap.put("Scene", 0);
+        // paramMap.put("Scene", 0);
         try {
             String paramStr = JSON.toJSONString(paramMap);
             HttpEntity entity = myHttpClient.doPost(url, paramStr);
@@ -101,9 +100,9 @@ public class MessageTools {
     }
 
     public static void webWxSendInvite(String nickName) {
+        Core core = Core.getInstance();
         String toUserName = WechatTools.getUserNameByNickName(nickName);
-        String url = String.format(URLEnum.WEB_WX_SEND_MSG.getUrl(),
-            core.getLoginInfo().get("url"));
+        String url = String.format(URLEnum.WEB_WX_SEND_MSG.getUrl(), core.getLoginInfo().get("url"));
         Map<String, Object> msgMap = new HashMap<>();
         msgMap.put("Type", 49);
         msgMap.put("Content",
@@ -118,7 +117,7 @@ public class MessageTools {
 
         webWxSendAppMsg(toUserName, null);
 
-        //        paramMap.put("Scene", 0);
+        // paramMap.put("Scene", 0);
         try {
             String paramStr = JSON.toJSONString(paramMap);
             HttpEntity entity = myHttpClient.doPost(url, paramStr);
@@ -134,13 +133,13 @@ public class MessageTools {
      *
      */
     private static JSONObject webWxUploadMedia(String filePath) {
+        Core core = Core.getInstance();
         File f = new File(filePath);
         if (!f.exists() && f.isFile()) {
             LOG.info("file is not exist");
             return null;
         }
-        String url = String.format(URLEnum.WEB_WX_UPLOAD_MEDIA.getUrl(),
-            core.getLoginInfo().get("fileUrl"));
+        String url = String.format(URLEnum.WEB_WX_UPLOAD_MEDIA.getUrl(), core.getLoginInfo().get("fileUrl"));
         String mimeType = new MimetypesFileTypeMap().getContentType(f);
         String mediaType = "";
         if (mimeType == null) {
@@ -150,9 +149,9 @@ public class MessageTools {
         }
         String lastModifieDate = new SimpleDateFormat("yyyy MM dd HH:mm:ss").format(new Date());
         long fileSize = f.length();
-        String passTicket = (String) core.getLoginInfo().get("pass_ticket");
-        String clientMediaId = String.valueOf(new Date().getTime())
-                               + String.valueOf(new Random().nextLong()).substring(0, 4);
+        String passTicket = (String)core.getLoginInfo().get("pass_ticket");
+        String clientMediaId
+            = String.valueOf(new Date().getTime()) + String.valueOf(new Random().nextLong()).substring(0, 4);
         String webwxDataTicket = MyHttpClient.getCookie("webwx_data_ticket");
         if (webwxDataTicket == null) {
             LOG.error("get cookie webwx_data_ticket error");
@@ -176,8 +175,7 @@ public class MessageTools {
         builder.addTextBody("lastModifieDate", lastModifieDate, ContentType.TEXT_PLAIN);
         builder.addTextBody("size", String.valueOf(fileSize), ContentType.TEXT_PLAIN);
         builder.addTextBody("mediatype", mediaType, ContentType.TEXT_PLAIN);
-        builder.addTextBody("uploadmediarequest", JSON.toJSONString(paramMap),
-            ContentType.TEXT_PLAIN);
+        builder.addTextBody("uploadmediarequest", JSON.toJSONString(paramMap), ContentType.TEXT_PLAIN);
         builder.addTextBody("webwx_data_ticket", webwxDataTicket, ContentType.TEXT_PLAIN);
         builder.addTextBody("pass_ticket", passTicket, ContentType.TEXT_PLAIN);
         builder.addBinaryBody("filename", f, ContentType.create(mimeType), filePath);
@@ -198,7 +196,7 @@ public class MessageTools {
     /**
      * 根据NickName发送图片消息
      * 
-    
+     * 
      */
     public static boolean sendPicMsgByNickName(String nickName, String filePath) {
         String toUserName = WechatTools.getUserNameByNickName(nickName);
@@ -228,15 +226,16 @@ public class MessageTools {
      *
      */
     private static boolean webWxSendMsgImg(String userId, String mediaId) {
-        String url = String.format("%s/webwxsendmsgimg?fun=async&f=json&pass_ticket=%s",
-            core.getLoginInfo().get("url"), core.getLoginInfo().get("pass_ticket"));
+        Core core = Core.getInstance();
+        String url = String.format("%s/webwxsendmsgimg?fun=async&f=json&pass_ticket=%s", core.getLoginInfo().get("url"),
+            core.getLoginInfo().get("pass_ticket"));
         Map<String, Object> msgMap = new HashMap<String, Object>();
         msgMap.put("Type", 3);
         msgMap.put("MediaId", mediaId);
         msgMap.put("FromUserName", core.getUserSelf().getString("UserName"));
         msgMap.put("ToUserName", userId);
-        String clientMsgId = String.valueOf(new Date().getTime())
-                             + String.valueOf(new Random().nextLong()).substring(1, 5);
+        String clientMsgId
+            = String.valueOf(new Date().getTime()) + String.valueOf(new Random().nextLong()).substring(1, 5);
         msgMap.put("LocalID", clientMsgId);
         msgMap.put("ClientMsgId", clientMsgId);
         Map<String, Object> paramMap = core.getParamMap();
@@ -247,8 +246,7 @@ public class MessageTools {
         if (entity != null) {
             try {
                 String result = EntityUtils.toString(entity, Consts.UTF_8);
-                return JSON.parseObject(result).getJSONObject("BaseResponse")
-                    .getInteger("Ret") == 0;
+                return JSON.parseObject(result).getJSONObject("BaseResponse").getInteger("Ret") == 0;
             } catch (Exception e) {
                 LOG.error("webWxSendMsgImg 错误： ", e);
             }
@@ -291,7 +289,7 @@ public class MessageTools {
     /**
      * 根据用户昵称发送文件消息
      * 
-    
+     * 
      */
     public static boolean sendFileMsgByNickName(String nickName, String filePath) {
         String toUserName = WechatTools.getUserNameByNickName(nickName);
@@ -306,11 +304,13 @@ public class MessageTools {
      *
      */
     private static boolean webWxSendAppMsg(String userId, Map<String, String> data) {
-        String url = String.format("%s/webwxsendappmsg?fun=async&f=json&pass_ticket=%s",
-            core.getLoginInfo().get("url"), core.getLoginInfo().get("pass_ticket"));
-        String clientMsgId = String.valueOf(new Date().getTime())
-                             + String.valueOf(new Random().nextLong()).substring(1, 5);
-        String content = "<msg><appmsg appid=\"\"  sdkver=\"0\"><title>1212</title><des></des><type>5</type><content></content><url></url><thumburl></thumburl></appmsg><appinfo><version></version><appname></appname></appinfo></msg>";
+        Core core = Core.getInstance();
+        String url = String.format("%s/webwxsendappmsg?fun=async&f=json&pass_ticket=%s", core.getLoginInfo().get("url"),
+            core.getLoginInfo().get("pass_ticket"));
+        String clientMsgId
+            = String.valueOf(new Date().getTime()) + String.valueOf(new Random().nextLong()).substring(1, 5);
+        String content
+            = "<msg><appmsg appid=\"\"  sdkver=\"0\"><title>1212</title><des></des><type>5</type><content></content><url></url><thumburl></thumburl></appmsg><appinfo><version></version><appname></appname></appinfo></msg>";
         Map<String, Object> msgMap = new HashMap<>();
         msgMap.put("Type", 49);
         msgMap.put("Content", content);
@@ -335,8 +335,7 @@ public class MessageTools {
         if (entity != null) {
             try {
                 String result = EntityUtils.toString(entity, Consts.UTF_8);
-                return JSON.parseObject(result).getJSONObject("BaseResponse")
-                    .getInteger("Ret") == 0;
+                return JSON.parseObject(result).getJSONObject("BaseResponse").getInteger("Ret") == 0;
             } catch (Exception e) {
                 LOG.error("错误: ", e);
             }
@@ -348,6 +347,8 @@ public class MessageTools {
      * 被动添加好友
      */
     public static void addFriend(BaseMsg msg, boolean accept) {
+        Core core = Core.getInstance();
+        
         if (!accept) { // 不添加
             return;
         }
@@ -359,9 +360,8 @@ public class MessageTools {
         // TODO 此处需要更新好友列表
         // core.getContactList().add(msg.getJSONObject("RecommendInfo"));
 
-        String url = String.format(URLEnum.WEB_WX_VERIFYUSER.getUrl(),
-            core.getLoginInfo().get("url"), String.valueOf(System.currentTimeMillis() / 3158L),
-            core.getLoginInfo().get("pass_ticket"));
+        String url = String.format(URLEnum.WEB_WX_VERIFYUSER.getUrl(), core.getLoginInfo().get("url"),
+            String.valueOf(System.currentTimeMillis() / 3158L), core.getLoginInfo().get("pass_ticket"));
 
         List<Map<String, Object>> verifyUserList = new ArrayList<Map<String, Object>>();
         Map<String, Object> verifyUser = new HashMap<String, Object>();

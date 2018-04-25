@@ -7,10 +7,10 @@ package com.helen.robot.service;
 public interface ILoginService {
 
     /**
-     * 登陆
+     * 登陆超时，直接退出当前线程
     
      */
-    boolean login();
+    boolean waitForLogin();
 
     /**
      * 获取UUID
