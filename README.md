@@ -38,7 +38,7 @@
 6. http://127.0.0.1:8088/helen, reset success!
 7. 重复第 4 步，http://127.0.0.1:8088，手机微信登录，就可以使用了
 
-#demo
+# demo
 
 1. 我已经部署到我的域名下了，http://www.glowd.cn
 2. 重置：  http://glowd.cn:8088/helen
