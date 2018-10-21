@@ -79,7 +79,7 @@ public class HttpServerHandler extends ChannelInboundHandlerAdapter {
 		}).start();
 
 		try {
-			Thread.sleep(1000); // wait for receiving thread end at LoginServiceImpl.
+			Thread.sleep(2000); // wait for receiving thread end at LoginServiceImpl.
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -91,12 +91,6 @@ public class HttpServerHandler extends ChannelInboundHandlerAdapter {
 		IMsgHandlerFace msgHandler = new HelenRobot();
 		Wechat wechat = new Wechat(msgHandler, HelenRobot.path);
 		wechat.start();
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		LOG.info("Reset success!");
 		isNotReset = false;
 	}
