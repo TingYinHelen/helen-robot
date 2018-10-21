@@ -83,10 +83,7 @@ public class HttpServerHandler extends ChannelInboundHandlerAdapter {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-
-		FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer(
-				"Reset success! Please open http://127.0.0.1:8088 and scan qrcode within 1 minutes ".getBytes()));
-		return response;
+		return doQRResponse();
 	}
 
 	private void relogin() {
@@ -94,6 +91,12 @@ public class HttpServerHandler extends ChannelInboundHandlerAdapter {
 		IMsgHandlerFace msgHandler = new HelenRobot();
 		Wechat wechat = new Wechat(msgHandler, HelenRobot.path);
 		wechat.start();
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		LOG.info("Reset success!");
 		isNotReset = false;
 	}
