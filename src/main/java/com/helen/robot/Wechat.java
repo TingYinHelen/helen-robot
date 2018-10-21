@@ -1,11 +1,12 @@
 package com.helen.robot;
 
-import com.helen.robot.controller.LoginController;
-import com.helen.robot.core.MsgCenter;
-import com.helen.robot.face.IMsgHandlerFace;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.helen.robot.controller.LoginController;
+import com.helen.robot.core.CoreInfo;
+import com.helen.robot.core.MsgCenter;
+import com.helen.robot.face.IMsgHandlerFace;
 
 /**
  * 
@@ -36,12 +37,14 @@ import org.slf4j.LoggerFactory;
 public class Wechat {
     private static final Logger LOG = LoggerFactory.getLogger(Wechat.class);
     private final IMsgHandlerFace msgHandler;
+    private final CoreInfo coreInfo;
     private final String qrPath;
 
     public Wechat(IMsgHandlerFace msgHandler, String qrPath) {
         System.setProperty("jsse.enableSNIExtension", "false"); // 防止SSL错误
         this.msgHandler = msgHandler;
         this.qrPath = qrPath;
+        this.coreInfo=new CoreInfo();
     }
 
     /***
@@ -62,7 +65,7 @@ public class Wechat {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                MsgCenter.handleMsg(msgHandler);
+                MsgCenter.handleMsg(msgHandler,coreInfo);
             }
         }).start();
     }
@@ -71,7 +74,7 @@ public class Wechat {
      * 登录
      */
     private void login() {
-        LoginController login = new LoginController();
+        LoginController login = new LoginController(this.coreInfo);
         login.login(this.qrPath);
     }
 

@@ -13,9 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.helen.robot.HelenRobot;
-import com.helen.robot.TulingRobot;
-import com.helen.robot.controller.LoginController;
-import com.helen.robot.core.Core;
+import com.helen.robot.Wechat;
+import com.helen.robot.face.IMsgHandlerFace;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
@@ -27,112 +26,112 @@ import io.netty.handler.codec.http.HttpHeaderValues;
 
 public class HttpServerHandler extends ChannelInboundHandlerAdapter {
 
-    private static Logger LOG = LoggerFactory.getLogger(TulingRobot.class);
-    private volatile static boolean isNotReset = false;// 最开始可以Reset
-    private static final Object RESET_LOCK=new Object();
+	private static Logger LOG = LoggerFactory.getLogger(HttpServerHandler.class);
+	private volatile static boolean isNotReset = false;// 最开始可以Reset
+	private static final Object RESET_LOCK = new Object();
 
-    @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+	@Override
+	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 
-        DefaultHttpRequest request = (DefaultHttpRequest)msg;
-        String host = request.headers().get("Host");
-        String uri = request.uri();
-        String url = host + uri;
+		DefaultHttpRequest request = (DefaultHttpRequest) msg;
+		String host = request.headers().get("Host");
+		String uri = request.uri();
+		String url = host + uri;
 
-        LOG.info("Received from {}", url);
+		LOG.info("Received from {}", url);
 
-        FullHttpResponse response;
+		FullHttpResponse response;
 
-        if (request.uri().equals("/helen")) {
-            synchronized (RESET_LOCK) {
-                if (isNotReset) {
-                    response = doNotResponse();
-                } else {
-                    isNotReset = true;
-                    response = doResetAndLogin(url);
-                }
-            }
-        } else {
-            response = doQRResponse();
-        }
+		if (request.uri().equals("/helen")) {
+			synchronized (RESET_LOCK) {
+				if (isNotReset) {
+					response = doNotResponse();
+				} else {
+					isNotReset = true;
+					response = doResetAndLogin(url);
+				}
+			}
+		} else {
+			response = doQRResponse();
+		}
 
-        ctx.write(response);
-        ctx.flush();
+		ctx.write(response);
+		ctx.flush();
 
-    }
+	}
 
-    private FullHttpResponse doNotResponse() {
-        FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, OK,
-            Unpooled.wrappedBuffer("Reset is too fast,please try again 20s later!".getBytes()));
-        return response;
-    }
+	private FullHttpResponse doNotResponse() {
+		FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, OK,
+				Unpooled.wrappedBuffer("Reset is too fast,please try again 20s later!".getBytes()));
+		return response;
+	}
 
-    private FullHttpResponse doResetAndLogin(String url) {
+	private FullHttpResponse doResetAndLogin(String url) {
 
-        LOG.info("Starting reset from {} ", url);
-        Core.resetInstance();
+		LOG.info("Starting reset from {} ", url);
 
-        new Thread(new Runnable() {
+		new Thread(new Runnable() {
 
-            @Override
-            public void run() {
-                relogin();
-            }
-        }).start();
-        
-        try {
-            Thread.sleep(1000); //wait for receiving thread end at LoginServiceImpl.
-        } catch (InterruptedException e) {
-             e.printStackTrace();
-        }
-        
-        FullHttpResponse response
-            = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer("Reset success! Please open http://127.0.0.1:8088 and scan qrcode within 1 minutes ".getBytes()));
-        return response;
-    }
+			@Override
+			public void run() {
+				relogin();
+			}
+		}).start();
 
-    private void relogin() {
-        LOG.info("Starting relogin......");
-        LoginController login = new LoginController();
-        login.login(HelenRobot.path);
-        LOG.info("Reset success!");
-        isNotReset = false;
-    }
+		try {
+			Thread.sleep(1000); // wait for receiving thread end at LoginServiceImpl.
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 
-    private FullHttpResponse doQRResponse() {
-        FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer(getBytes()));
-        response.headers().set(CONTENT_TYPE, "image/jpg");
-        response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
-        response.headers().set(CONNECTION, HttpHeaderValues.KEEP_ALIVE);
-        return response;
-    }
+		FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer(
+				"Reset success! Please open http://127.0.0.1:8088 and scan qrcode within 1 minutes ".getBytes()));
+		return response;
+	}
 
-    public byte[] getBytes() {
+	private void relogin() {
+		LOG.info("Starting relogin......");
+		IMsgHandlerFace msgHandler = new HelenRobot();
+		Wechat wechat = new Wechat(msgHandler, HelenRobot.path);
+		wechat.start();
+		LOG.info("Reset success!");
+		isNotReset = false;
+	}
 
-        String qrPath = "/opt/robot/QR.jpg";
-        byte data[] = null;
+	private FullHttpResponse doQRResponse() {
+		FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer(getBytes()));
+		response.headers().set(CONTENT_TYPE, "image/jpg");
+		response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
+		response.headers().set(CONNECTION, HttpHeaderValues.KEEP_ALIVE);
+		return response;
+	}
 
-        try {
-            InputStream hFile = new FileInputStream(qrPath);
-            int size = hFile.available(); // 得到文件大小
-            data = new byte[size];
-            hFile.read(data); // 读数据
-            hFile.close();
+	public byte[] getBytes() {
 
-        } catch (Exception e) {
-            LOG.info(e.getMessage());
-        }
+		String qrPath = "/opt/robot/QR.jpg";
+		byte data[] = null;
 
-        return data;
-    }
+		try {
+			InputStream hFile = new FileInputStream(qrPath);
+			int size = hFile.available(); // 得到文件大小
+			data = new byte[size];
+			hFile.read(data); // 读数据
+			hFile.close();
 
-    @Override
-    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-        ctx.flush();
-    }
+		} catch (Exception e) {
+			LOG.info(e.getMessage());
+		}
 
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        ctx.close();
-    }
+		return data;
+	}
+
+	@Override
+	public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+		ctx.flush();
+	}
+
+	@Override
+	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+		ctx.close();
+	}
 }

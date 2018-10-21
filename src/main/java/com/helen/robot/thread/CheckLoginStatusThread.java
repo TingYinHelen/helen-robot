@@ -1,6 +1,6 @@
 package com.helen.robot.thread;
 
-import com.helen.robot.core.Core;
+import com.helen.robot.core.CoreInfo;
 import com.helen.robot.utils.SleepUtils;
 
 /**
@@ -13,18 +13,23 @@ import com.helen.robot.utils.SleepUtils;
  *
  */
 public class CheckLoginStatusThread implements Runnable {
-    private Core core = Core.getInstance();
 
-    @Override
-    public void run() {
-        while (Core.getInstance().isAlive()) {
-            //         long t1 = System.currentTimeMillis(); // 秒为单位
-            //			if (t1 - core.getLastNormalRetcodeTime() > 60 * 1000) { // 超过60秒，判为离线
-            //				core.setAlive(false);
-            //				LOG.info("微信已离线");
-            //			}
-            SleepUtils.sleep(10 * 1000); // 休眠10秒
-        }
-    }
+	private CoreInfo core;
+
+	public CheckLoginStatusThread(CoreInfo core) {
+		this.core = core;
+	}
+
+	@Override
+	public void run() {
+		while (this.core.isAlive()) {
+			// long t1 = System.currentTimeMillis(); // 秒为单位
+			// if (t1 - core.getLastNormalRetcodeTime() > 60 * 1000) { // 超过60秒，判为离线
+			// core.setAlive(false);
+			// LOG.info("微信已离线");
+			// }
+			SleepUtils.sleep(10 * 1000); // 休眠10秒
+		}
+	}
 
 }
