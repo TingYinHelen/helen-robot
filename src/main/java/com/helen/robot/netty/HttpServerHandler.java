@@ -90,7 +90,7 @@ public class HttpServerHandler extends ChannelInboundHandlerAdapter {
 		LOG.info("Starting relogin......");
 		IMsgHandlerFace msgHandler = new HelenRobot();
 		Wechat wechat = new Wechat(msgHandler, HelenRobot.path);
-		wechat.start();
+//		wechat.start();
 		LOG.info("Reset success!");
 		isNotReset = false;
 	}

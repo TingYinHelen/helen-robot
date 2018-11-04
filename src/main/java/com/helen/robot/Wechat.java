@@ -1,5 +1,7 @@
 package com.helen.robot;
 
+import java.util.concurrent.CountDownLatch;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,13 +20,17 @@ import com.helen.robot.face.IMsgHandlerFace;
  * http://127.0.0.1:8088/helen，这个可以重新登录。如果你二维码2分钟内没有扫描就会失效，然后可以通过这个指令重新登录，然后重新扫描。或者我现在可能不想使用这个机器人了，我就退出。
  * 过了一段时间我想玩机器人，但是我此刻又没有服务器可以重启。所有可以通过这个指令重新登录，然后重新扫描
  * 
- * 目的：1.可以linux部署  2.可以在任何时候地点登录，只要有手机就可以
+ * 目的：1.可以linux部署 2.可以在任何时候地点登录，只要有手机就可以
  * 
  * 
  * 0 MessageTools 处理消息的类，例如发送用户消息，发送用户图片等<br>
  * 1. Core是单例核心类，里面保存了所有和用户相关的信息，包括消息，联系人，群组，公众号，服务号等 <br>
- * 2. 刚开始会开启一个处理消息的线程Wechat.startHandleMsgThread，从Core.msgList列表中获取消息，然后处理，处理完之后就删除消息，然后1s之后继续处理消息 <br>
- * 3. 登录,会一直等待，直到手机确认成功，大概125s超时。如果没有登录成功，可以通过浏览器输入http://127.0.0.1:8088/helen，进行重新登录 <br>
+ * 2.
+ * 刚开始会开启一个处理消息的线程Wechat.startHandleMsgThread，从Core.msgList列表中获取消息，然后处理，处理完之后就删除消息，然后1s之后继续处理消息
+ * <br>
+ * 3.
+ * 登录,会一直等待，直到手机确认成功，大概125s超时。如果没有登录成功，可以通过浏览器输入http://127.0.0.1:8088/helen，进行重新登录
+ * <br>
  * 4. 登录成功之后，会进行一些微信数据收集，1）登陆成功，微信初始化，2）开启微信状态通知<br>
  * 5. 登录成功之后，同时还会开启一个接收线程，LoginServiceImpl.startReceiving
  * 
@@ -35,47 +41,47 @@ import com.helen.robot.face.IMsgHandlerFace;
  * @date 2018/04/25
  */
 public class Wechat {
-    private static final Logger LOG = LoggerFactory.getLogger(Wechat.class);
-    private final IMsgHandlerFace msgHandler;
-    private final CoreInfo coreInfo;
-    private final String qrPath;
+	private static final Logger LOG = LoggerFactory.getLogger(Wechat.class);
+	private final IMsgHandlerFace msgHandler;
+	private final CoreInfo coreInfo;
+	private final String qrPath;
 
-    public Wechat(IMsgHandlerFace msgHandler, String qrPath) {
-        System.setProperty("jsse.enableSNIExtension", "false"); // 防止SSL错误
-        this.msgHandler = msgHandler;
-        this.qrPath = qrPath;
-        this.coreInfo=new CoreInfo();
-    }
+	public Wechat(IMsgHandlerFace msgHandler, String qrPath) {
+		System.setProperty("jsse.enableSNIExtension", "false"); // 防止SSL错误
+		this.msgHandler = msgHandler;
+		this.qrPath = qrPath;
+		this.coreInfo = new CoreInfo();
+	}
 
-    /***
-     * 1.开启处理消息的线程 <br>
-     * 2.登录
-     */
-    public void start() {
-        LOG.info("+++++++++++++++++++开启接收消息的线程+++++++++++++++++++++");
-        startHandleMsgThread();
-        LOG.info("+++++++++++++++++++开始登录+++++++++++++++++++++");
-        login();
-    }
+	/***
+	 * 1.开启处理消息的线程 <br>
+	 * 2.登录
+	 */
+	public void start(CountDownLatch latch) {
+		LOG.info("+++++++++++++++++++开启接收消息的线程+++++++++++++++++++++");
+		startHandleMsgThread();
+		LOG.info("+++++++++++++++++++开始登录+++++++++++++++++++++");
+		login(latch);
+	}
 
-    /***
-     * 开启接收消息的线程
-     */
-    private void startHandleMsgThread() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                MsgCenter.handleMsg(msgHandler,coreInfo);
-            }
-        }).start();
-    }
+	/***
+	 * 开启接收消息的线程
+	 */
+	private void startHandleMsgThread() {
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				MsgCenter.handleMsg(msgHandler, coreInfo);
+			}
+		}).start();
+	}
 
-    /***
-     * 登录
-     */
-    private void login() {
-        LoginController login = new LoginController(this.coreInfo);
-        login.login(this.qrPath);
-    }
+	/***
+	 * 登录
+	 */
+	private void login(CountDownLatch latch) {
+		LoginController login = new LoginController(this.coreInfo, latch);
+		login.login(this.qrPath);
+	}
 
 }

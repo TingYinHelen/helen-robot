@@ -1,5 +1,7 @@
 package com.helen.robot.controller;
 
+import java.util.concurrent.CountDownLatch;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,15 +20,17 @@ public class LoginController {
 	private static Logger LOG = LoggerFactory.getLogger(LoginController.class);
 	private final ILoginService loginService;
 	private CoreInfo coreInfo;
+	private CountDownLatch notify;
 
-	public LoginController(CoreInfo coreInfo) {
+	public LoginController(CoreInfo coreInfo, CountDownLatch notify) {
 		this.coreInfo = coreInfo;
 		this.loginService = new LoginServiceImpl(coreInfo);
+		this.notify = notify;
 	}
 
 	public void login(String qrPath) {
 		if (coreInfo.isAlive()) { // 已登陆
-			LOG.info("itchat4j已登陆");
+			LOG.info("Helen robot已登陆");
 			return;
 		}
 
@@ -48,6 +52,7 @@ public class LoginController {
 			}
 		}
 		LOG.info("3. 请打开浏览器输入http://127.0.0.1:8088,扫描二维码图片，并在手机上确认");
+		notify.countDown();
 		if (!coreInfo.isAlive()) {
 
 			// 一直等待，直到手机确认成功，大概125s超时
