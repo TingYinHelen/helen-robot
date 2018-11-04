@@ -1,8 +1,11 @@
 package com.helen.robot;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.helen.robot.api.WechatTools;
 import com.helen.robot.controller.LoginController;
 import com.helen.robot.core.CoreInfo;
 import com.helen.robot.core.MsgCenter;
@@ -76,6 +79,9 @@ public class Wechat {
     private void login() {
         LoginController login = new LoginController(this.coreInfo);
         login.login(this.qrPath);
+        List contactList = new WechatTools(this.coreInfo).getContactList();
+        
+        System.out.println("---------------contactList" + contactList );
     }
 
 }
