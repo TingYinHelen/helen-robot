@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.concurrent.CountDownLatch;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,28 +23,54 @@ public class HelenRobot implements IMsgHandlerFace {
 
 	private static Logger LOG = LoggerFactory.getLogger(HelenRobot.class);
 	public static final String path = "/opt/robot";
+	private volatile static boolean isNotReset = false;// 最开始可以Reset
+	private static final Object RESET_LOCK = new Object();
+	final static CountDownLatch latch = new CountDownLatch(1);
+
 
 	public static void main(String[] args) throws Exception {
 
-		LOG.info("Starting httpserver....");
+//		LOG.info("Starting httpserver....");
+//
+//		Thread netty = new Thread(new Runnable() {
+//			@Override
+//			public void run() {
+//				try {
+//					new HelenRobot().startNetty();
+//				} catch (Exception e) {
+//					e.printStackTrace();
+//				}
+//			}
+//		});
+//		netty.start();
+//
+//		LOG.info("Started httpserver at 8088.");
+//
+//		IMsgHandlerFace msgHandler = new HelenRobot();
+//		Wechat wechat = new Wechat(msgHandler, HelenRobot.path);
+//		wechat.start();
+	}
 
-		Thread netty = new Thread(new Runnable() {
+	public synchronized static void newWechat() throws InterruptedException {
+
+		//final CountDownLatch latch = new CountDownLatch(1);
+		LOG.info("Starting newWechat......");
+		new Thread(new Runnable() {
 			@Override
 			public void run() {
-				try {
-					new HelenRobot().startNetty();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+				wechat(latch);
 			}
-		});
-		netty.start();
+		}).start();
+		latch.await();
+		LOG.info("New Wechat success!");
 
-		LOG.info("Started httpserver at 8088.");
+	}
 
+	private static void wechat(CountDownLatch notify) {
 		IMsgHandlerFace msgHandler = new HelenRobot();
 		Wechat wechat = new Wechat(msgHandler, HelenRobot.path);
-		wechat.start();
+		wechat.start(notify);
+		isNotReset = false;
 	}
 
 	public void startNetty() throws Exception {
