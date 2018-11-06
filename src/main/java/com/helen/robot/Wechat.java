@@ -4,12 +4,15 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.helen.robot.api.WechatTools;
 import com.helen.robot.controller.LoginController;
 import com.helen.robot.core.CoreInfo;
 import com.helen.robot.core.MsgCenter;
 import com.helen.robot.face.IMsgHandlerFace;
+import com.helen.wechat.dao.UserDao;
+import com.helen.wechat.entity.UserEntity;
 
 /**
  *
@@ -46,6 +49,8 @@ public class Wechat {
 	private final IMsgHandlerFace msgHandler;
 	private final CoreInfo coreInfo;
 	private final String qrPath;
+	@Autowired
+    private UserDao userDao;
 
 	public Wechat(IMsgHandlerFace msgHandler, String qrPath) {
 		System.setProperty("jsse.enableSNIExtension", "false"); // 防止SSL错误
@@ -83,8 +88,13 @@ public class Wechat {
 	private void login(CountDownLatch latch) {
 		LoginController login = new LoginController(this.coreInfo, latch);
 		login.login(this.qrPath);
-		List contactList = new WechatTools(this.coreInfo).getContactList();
-        System.out.println("---------------contactList" + contactList );
+		UserEntity user = new UserEntity();
+		Object self = this.coreInfo.getUserSelf();
+		System.out.print(self);
+//		userDao.saveUser(user);
+//		user.save
+//		this.coreInfo.getUserSelf();
+		List contactList = this.coreInfo.getWechatTools().getContactList();
 	}
 
 }
