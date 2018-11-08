@@ -4,15 +4,10 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import com.helen.robot.api.WechatTools;
 import com.helen.robot.controller.LoginController;
 import com.helen.robot.core.CoreInfo;
 import com.helen.robot.core.MsgCenter;
 import com.helen.robot.face.IMsgHandlerFace;
-import com.helen.wechat.dao.UserDao;
-import com.helen.wechat.entity.UserEntity;
 
 /**
  *
@@ -49,8 +44,7 @@ public class Wechat {
 	private final IMsgHandlerFace msgHandler;
 	private final CoreInfo coreInfo;
 	private final String qrPath;
-	@Autowired
-    private UserDao userDao;
+	private Thread wechatThread;
 
 	public Wechat(IMsgHandlerFace msgHandler, String qrPath) {
 		System.setProperty("jsse.enableSNIExtension", "false"); // 防止SSL错误
@@ -58,12 +52,17 @@ public class Wechat {
 		this.qrPath = qrPath;
 		this.coreInfo = new CoreInfo();
 	}
+	
+	public CoreInfo getCoreInfo(){
+		return coreInfo;
+	}
 
 	/***
 	 * 1.开启处理消息的线程 <br>
 	 * 2.登录
 	 */
-	public void start(CountDownLatch latch) {
+	public void start(CountDownLatch latch, Thread thread) {
+		this.wechatThread = thread;
 		LOG.info("+++++++++++++++++++开启接收消息的线程+++++++++++++++++++++");
 		startHandleMsgThread();
 		LOG.info("+++++++++++++++++++开始登录+++++++++++++++++++++");
@@ -88,13 +87,10 @@ public class Wechat {
 	private void login(CountDownLatch latch) {
 		LoginController login = new LoginController(this.coreInfo, latch);
 		login.login(this.qrPath);
-		UserEntity user = new UserEntity();
-		Object self = this.coreInfo.getUserSelf();
-		System.out.print(self);
-//		userDao.saveUser(user);
-//		user.save
-//		this.coreInfo.getUserSelf();
+//		Object self = this.coreInfo.getUserSelf();
+//		System.out.println("self:" + self);
 		List contactList = this.coreInfo.getWechatTools().getContactList();
+		this.wechatThread.start();
 	}
 
 }
