@@ -44,7 +44,7 @@ public class Wechat {
 	private final IMsgHandlerFace msgHandler;
 	private final CoreInfo coreInfo;
 	private final String qrPath;
-	private Thread wechatThread;
+	private RobotCallback robotCallback;
 
 	public Wechat(IMsgHandlerFace msgHandler, String qrPath) {
 		System.setProperty("jsse.enableSNIExtension", "false"); // 防止SSL错误
@@ -52,8 +52,8 @@ public class Wechat {
 		this.qrPath = qrPath;
 		this.coreInfo = new CoreInfo();
 	}
-	
-	public CoreInfo getCoreInfo(){
+
+	public CoreInfo getCoreInfo() {
 		return coreInfo;
 	}
 
@@ -61,8 +61,8 @@ public class Wechat {
 	 * 1.开启处理消息的线程 <br>
 	 * 2.登录
 	 */
-	public void start(CountDownLatch latch, Thread thread) {
-		this.wechatThread = thread;
+	public void start(CountDownLatch latch, RobotCallback callback) {
+		this.robotCallback = callback;
 		LOG.info("+++++++++++++++++++开启接收消息的线程+++++++++++++++++++++");
 		startHandleMsgThread();
 		LOG.info("+++++++++++++++++++开始登录+++++++++++++++++++++");
@@ -87,10 +87,8 @@ public class Wechat {
 	private void login(CountDownLatch latch) {
 		LoginController login = new LoginController(this.coreInfo, latch);
 		login.login(this.qrPath);
-//		Object self = this.coreInfo.getUserSelf();
-//		System.out.println("self:" + self);
-		List contactList = this.coreInfo.getWechatTools().getContactList();
-		this.wechatThread.start();
+	//	List contactList = this.coreInfo.getWechatTools().getContactList();
+		this.robotCallback.callback(coreInfo);
 	}
 
 }
