@@ -57,6 +57,8 @@ public class CoreInfo {
 
 	private final MessageTools message;
 	private final WechatTools wechatTools;
+	// 与微信绑定
+	public String openid;
 
 	public CoreInfo() {
 		this.message = new MessageTools(this);
